@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { input } from "framer-motion/client";
 
 const CartSummary = ({ cartItems = [] }) => {
   const [code, setCode] = useState("");
@@ -41,12 +42,18 @@ const CartSummary = ({ cartItems = [] }) => {
     const formattedCode = code.trim().toUpperCase();
     setChecked(true);
 
+    if(!formattedCode) {
+      setApplied(false);
+      return;
+    }
+    
     if (formattedCode === "SAVE20" && subtotal >= 50000) {
       setApplied(true);
     } else {
       setApplied(false);
       alert("Invalid code or conditions not met!");
     }
+
   };
 
   const afterDiscount = Math.max(subtotal - discount, 0);
@@ -127,13 +134,13 @@ const CartSummary = ({ cartItems = [] }) => {
             Apply Now
           </button>
         </div>
-        {checked && applied && (
+        {checked && code.trim() && applied && (
           <p className="text-xs text-green-600 flex gap-2">
             Code Applied
             <Check className="text-green w-5 h-5" />
           </p>
         )}
-        {checked && !applied && (
+        {checked && code.trim() && !applied && (
           <p className="text-xs text-red-500">Invalid code!</p>
         )}
       </div>
