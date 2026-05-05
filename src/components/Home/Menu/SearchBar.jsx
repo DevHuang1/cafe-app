@@ -1,3 +1,7 @@
 export default function SearchBar() {
-  return <></>;
+  return (
+    <>
+      <div>Hello this is menu</div>
+    </>
+  );
 }
