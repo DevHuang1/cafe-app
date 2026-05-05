@@ -1,4 +1,4 @@
 "use server";
-export default function Menu() {
+export default async function Menu() {
   return <></>;
 }
