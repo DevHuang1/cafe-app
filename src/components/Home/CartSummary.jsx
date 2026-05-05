@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, use } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Tag,
   ReceiptText,
@@ -78,7 +78,7 @@ const CartSummary = ({ cartItems = [] }) => {
     alert("Order placed successfully!");
     router.push(
         `/success?total=${total.toFixed(2)}&method=${paymentMethod}`,
-    );
+    )
   }
 
 
