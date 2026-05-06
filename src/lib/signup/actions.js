@@ -25,6 +25,7 @@ export default async function Signup(formData) {
 
   if (error) {
     console.error("Signup error:", error.message);
+    return { error: error.message };
   }
-  redirect("/login?message=Check your email to confirm your account");
+  redirect("/login?message=Check your email");
 }
