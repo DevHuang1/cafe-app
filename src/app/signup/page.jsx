@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { signup } from "@/lib/login/actions";
+import Signup from "@/lib/signup/actions";
 
 export default function SignUpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -11,7 +11,7 @@ export default function SignUpPage() {
     const formData = new FormData(e.currentTarget);
     setUserEmail(formData.get("email"));
 
-    await signup(formData);
+    await Signup(formData);
     setIsModalOpen(true);
   };
   const handleVerifyOtp = async (otp) => {
