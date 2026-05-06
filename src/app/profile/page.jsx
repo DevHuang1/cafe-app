@@ -12,10 +12,7 @@ export default function ProfileView() {
   useEffect(() => {
     async function getUser() {
       setLoading(true);
-
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
 
       if (authUser) {
         const { data, error } = await supabase
@@ -30,17 +27,24 @@ export default function ProfileView() {
     }
 
     getUser();
-  }, []);
+  }, [supabase]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex items-center justify-center">
-        Loading profile...
+        <div className="text-[#6B4226] font-medium animate-pulse">Loading profile...</div>
       </div>
     );
   }
 
-  if (!user) return <div className="text-center py-20">User not found.</div>;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F6F4F2] flex flex-col items-center justify-center py-20">
+        <p className="text-xl font-bold text-[#2D2A26]">User not found.</p>
+        <Link href="/login" className="mt-4 text-[#C08A5D] hover:underline">Return to Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F6F4F2] px-4 py-10">
@@ -59,14 +63,14 @@ export default function ProfileView() {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-white">
-                  {user.full_name?.charAt(0)}
+                  {user.full_name?.charAt(0) || "U"}
                 </div>
               )}
             </button>
 
-            <h1 className="mt-5 text-3xl font-bold">{user.full_name}</h1>
+            <h1 className="mt-5 text-3xl font-bold">{user.full_name || "New User"}</h1>
             <p className="mt-1 rounded-full bg-white/15 px-4 py-1 text-sm">
-              {user.role}
+              {user.role || "Staff"}
             </p>
 
             <Link
@@ -80,24 +84,28 @@ export default function ProfileView() {
 
         <div className="p-6 sm:p-8">
           <h2 className="text-xl font-bold text-[#2D2A26]">Account Details</h2>
+          <p className="mt-1 text-sm text-[#6B6B6B]">
+            Basic information for your cafe account.
+          </p>
+          
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ProfileItem label="Employee ID" value={user.employee_id} />
+            <ProfileItem label="Employee ID" value={user.employee_id || user.employeeId} />
             <ProfileItem label="Status" value={user.status} />
             <ProfileItem label="Email" value={user.email} />
             <ProfileItem label="Phone" value={user.phone} />
             <ProfileItem label="Address" value={user.address} />
             <ProfileItem
               label="Joined Date"
-              value={new Date(user.created_at).toLocaleDateString()}
+              value={user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
             />
           </div>
         </div>
       </div>
 
-      {showPhoto && (
+      {showPhoto && user.image_url && (
         <div
           onClick={() => setShowPhoto(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-pointer"
         >
           <img
             src={user.image_url}
