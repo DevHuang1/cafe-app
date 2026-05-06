@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 
 import { createClient } from "@/utils/supabase/client";
-import OtpModal from "@/components/auth/OtpModal";
+
 import Signup from "@/lib/signup/actions";
+import OtpModal from "@/components/Auth/OTPModal";
 export default function SignUpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
