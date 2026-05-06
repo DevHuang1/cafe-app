@@ -2,16 +2,29 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/client";
+import imageCompression from "browser-image-compression";
 
 export default function EditProfile() {
   const [formData, setFormData] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
     async function getUser() {
-      const res = await fetch("/api/profile");
-      const data = await res.json();
-      setFormData(data);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        if (data) setFormData(data);
+      }
     }
 
     getUser();
@@ -20,51 +33,69 @@ export default function EditProfile() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const confirmed = window.confirm(
-      "Save changes?"
-    );
+    if (!window.confirm("Save changes?")) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: formData.full_name || formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        image_url: formData.image_url,
+      })
+      .eq("id", user.id);
 
-    if (!confirmed) return;
-
-    const res = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    await res.json();
-
-    alert("Profile updated successfully!");
-
-    router.push("/profile");
+    if (!error) {
+      alert("Profile updated!");
+      router.push("/profile");
+    } else {
+      alert(error.message);
+    }
   }
 
-  function handleChange(e) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  }
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  function handleImageChange(e) {
+  async function handleImageChange(e) {
     const file = e.target.files[0];
 
     if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      setFormData({
-        ...formData,
-        image: reader.result,
-      });
+    setUploading(true);
+    const options = {
+      maxSizeMB: 3, //target
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
     };
+    try {
+      const compressedFile = await imageCompression(file, options);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    reader.readAsDataURL(file);
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, compressedFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      alert("Image processed and ready!");
+    } catch (error) {
+      console.error("Error processing image:", error);
+      alert("Error: " + error.message);
+    } finally {
+      setUploading(false);
+    }
   }
-
   if (!formData) {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex items-center justify-center">
@@ -126,7 +157,7 @@ export default function EditProfile() {
               label="Role"
               name="role"
               value={formData.role}
-              onChange={handleChange} 
+              onChange={handleChange}
               disabled
             />
 
@@ -149,21 +180,24 @@ export default function EditProfile() {
               label="Employee ID"
               name="employeeId"
               value={formData.employeeId}
-              onChange={handleChange} disabled
+              onChange={handleChange}
+              disabled
             />
 
             <InputField
               label="Shift"
               name="shift"
               value={formData.shift}
-              onChange={handleChange} disabled
+              onChange={handleChange}
+              disabled
             />
 
             <InputField
               label="Status"
               name="status"
               value={formData.status}
-              onChange={handleChange} disabled
+              onChange={handleChange}
+              disabled
             />
 
             <div className="sm:col-span-2">
@@ -213,12 +247,13 @@ function InputField({ label, name, value, onChange, type = "text", disabled }) {
         name={name}
         value={value}
         onChange={onChange}
-      disabled={disabled}
-      className={`w-full rounded-xl border px-4 py-2.5 outline-none transition
-        ${disabled
-          ? "bg-[#EFEAE6] text-[#6B6B6B] border-[#E5E1DC] cursor-not-allowed"
-          : "bg-[#F6F4F2] text-[#2D2A26] border-[#E5E1DC] focus:border-[#C08A5D] focus:ring-2 focus:ring-[#C08A5D]/30"
-        }`} 
+        disabled={disabled}
+        className={`w-full rounded-xl border px-4 py-2.5 outline-none transition
+        ${
+          disabled
+            ? "bg-[#EFEAE6] text-[#6B6B6B] border-[#E5E1DC] cursor-not-allowed"
+            : "bg-[#F6F4F2] text-[#2D2A26] border-[#E5E1DC] focus:border-[#C08A5D] focus:ring-2 focus:ring-[#C08A5D]/30"
+        }`}
       />
     </div>
   );
