@@ -1,6 +1,6 @@
 "use server";
 
-import SearchBar from "@/components/Home/Menu/SearchBar";
+import SearchBar from "@/components/Menu/SearchBar";
 
 export default async function Menu() {
   return (
