@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function Login(formData) {
   const cookieStore = await cookies();
@@ -14,7 +15,7 @@ export async function Login(formData) {
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    throw new Error(error);
+    return { success: false, message: error.message };
   }
 
   redirect("/menu");
