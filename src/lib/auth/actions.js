@@ -1,3 +1,5 @@
+"use server";
+
 export default async function requestPasswordReset(formData) {
   const supabase = await createClient();
   const email = formData.get("email");
