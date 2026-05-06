@@ -1,7 +1,6 @@
 // import CartList from "../../components/CartList";
-import CartSummary from "@/components/Home/CartSummary"
+import CartSummary from "@/components/Cart/CartSummary";
 export default function CartPage() {
-
   const cartItems = [
     { id: 1, name: "Latte", price: 8000, quantity: 2 },
     { id: 2, name: "Cappuccino", price: 7000, quantity: 1 },
