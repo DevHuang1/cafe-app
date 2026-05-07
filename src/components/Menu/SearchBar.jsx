@@ -1,5 +1,6 @@
-'use client';
 
+
+'use client';
 import { useState } from 'react';
 
 export default function SearchBar() {
@@ -10,29 +11,32 @@ export default function SearchBar() {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    if (e.key === 'Enter') handleSearch();
   };
 
   return (
-    <div className="bg-[#f8f1e9] border-b py-8">
+    <div className="border-b py-8" style={{ backgroundColor: '#EDE0D4', borderColor: '#D4B9A5' }}>
       <div className="max-w-3xl mx-auto px-4">
         <div className="flex gap-3">
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search our menu... (Cappuccino, Croissant, etc.)"
+              placeholder="Search our menu..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full px-6 py-4 bg-white border border-[#d4b89e] rounded-2xl focus:outline-none focus:border-[#6F4E37] focus:ring-2 focus:ring-[#6F4E37]/20 text-lg placeholder:text-[#9c7c5f]"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderColor: '#D4B9A5',
+                color: '#1F0F07',
+              }}
+              className="w-full px-6 py-4 border rounded-2xl focus:outline-none text-lg placeholder:text-[#957261] focus:ring-2 focus:ring-[#957261]/30"
             />
           </div>
-          
           <button
             onClick={handleSearch}
-            className="bg-[#6F4E37] hover:bg-[#5A3F2C] text-white px-10 py-4 rounded-2xl font-medium transition-all flex items-center gap-2 shadow-md"
+            style={{ backgroundColor: '#5C3D2E', color: '#EDE0D4', borderColor: '#957261' }}
+            className="border px-10 py-4 rounded-2xl font-semibold transition-all duration-150 shadow-md hover:brightness-110 hover:scale-105 active:scale-95"
           >
             Search
           </button>
