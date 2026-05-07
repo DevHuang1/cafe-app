@@ -18,5 +18,5 @@ export async function Login(formData) {
     return { success: false, message: error.message };
   }
 
-  redirect("/menu");
+  redirect("/profile");
 }
