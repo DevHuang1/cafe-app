@@ -1,8 +1,9 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export async function Login(formData) {
   const cookieStore = await cookies();
@@ -18,6 +19,6 @@ export async function Login(formData) {
   if (error) {
     return { success: false, message: error.message };
   }
-
+  revalidatePath("/", "layout");
   redirect("/profile");
 }
