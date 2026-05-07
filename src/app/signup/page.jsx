@@ -10,16 +10,24 @@ import OtpModal from "@/components/Auth/OTPModal";
 export default function SignUpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    setUserEmail(formData.get("email"));
-
-    await Signup(formData);
-    setIsModalOpen(true);
+    setLoading(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      setUserEmail(formData.get("email"));
+      await Signup(formData);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
   const handleVerifyOtp = async (otp) => {
+    setLoading(true);
     try {
       const supabase = createClient();
 
@@ -37,7 +45,9 @@ export default function SignUpPage() {
       if (data.session) {
         window.location.href = "/menu";
       }
-    } catch (err) {}
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4 font-sans">
@@ -109,9 +119,10 @@ export default function SignUpPage() {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-accent text-text-light font-semibold rounded-xl shadow-soft hover:bg-accent-hover transition-colors active:scale-[0.98]"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-accent text-text-light font-semibold rounded-xl shadow-soft hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
           </div>
         </form>
