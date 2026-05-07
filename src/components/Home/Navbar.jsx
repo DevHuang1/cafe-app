@@ -26,10 +26,14 @@ export default function Navbar() {
         setFullName(profile.full_name || "");
 
         if (profile.image_url) {
-          const { data } = supabase.storage
-            .from("avatars")
-            .getPublicUrl(profile.image_url);
-          setAvatarUrl(data.publicUrl);
+          if (profile.image_url.startsWith("http")) {
+            setAvatarUrl(profile.image_url);
+          } else {
+            const { data } = supabase.storage
+              .from("avatars")
+              .getPublicUrl(profile.image_url);
+            setAvatarUrl(data.publicUrl);
+          }
         }
       }
     } catch (err) {
