@@ -2,18 +2,19 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 
 export async function Login(formData) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+  const router = useRouter();
 
   const data = {
     email: formData.get("email"),
     password: formData.get("password"),
   };
   const { error } = await supabase.auth.signInWithPassword(data);
-
+  router.refresh();
   if (error) {
     return { success: false, message: error.message };
   }
