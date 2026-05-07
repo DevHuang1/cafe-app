@@ -1,4 +1,4 @@
-'use client';
+/*'use client';
 
 import { useState } from 'react';
 
@@ -32,9 +32,51 @@ export default function SearchBar() {
           
           <button
             onClick={handleSearch}
-            className="bg-[#6F4E37] hover:bg-[#5A3F2C] text-white px-10 py-4 rounded-2xl font-medium transition-all flex items-center gap-2 shadow-md"
+            className="bg-primary hover:bg-[#5A3F2C] text-white px-10 py-4 rounded-2xl font-medium transition-all flex items-center gap-2 shadow-md"
           >
             Search
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+} */
+'use client';
+
+import { useState } from 'react';
+
+export default function SearchBar() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = () => {
+    console.log('Searching for:', searchTerm);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  return (
+    <div className="bg-bg-main border-b border-border py-8">
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search our menu..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full px-6 py-4 bg-bg-card border border-border rounded-2xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-lg placeholder:text-text-secondary"
+            />
+          </div>
+
+          <button
+            onClick={handleSearch}
+            className="bg-primary hover:bg-primary-dark active:scale-95 border border-border text-text-light px-10 py-4 rounded-2xl font-medium transition-all duration-150 flex items-center gap-2 shadow-card hover:scale-105 hover:shadow-xl"
+           > Search
           </button>
         </div>
       </div>
