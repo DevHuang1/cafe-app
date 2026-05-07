@@ -9,7 +9,9 @@ import { Login } from "@/lib/login/actions";
 export default function LoginPage() {
   const router = useRouter();
 
-  async function handleSubmit(formData) {
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const result = await Login(formData);
 
     if (result?.error) {
