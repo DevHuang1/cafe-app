@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { Login } from "@/lib/login/actions";
+import LoginButton from "@/components/Auth/LoginBtn/LoginBtn";
 
 export default function LoginPage() {
   return (
@@ -58,12 +61,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-3 px-4 bg-btn-gradient text-text-light font-semibold rounded-xl shadow-soft hover:opacity-90 transition-opacity active:scale-[0.98]"
-          >
-            Sign In
-          </button>
+          <LoginButton />
         </form>
 
         {/* Footer */}
