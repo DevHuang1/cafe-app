@@ -13,9 +13,9 @@ export default function Navbar() {
   const supabase = createClient();
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchProfileAndAvatar = async (userId) => {
-      const { data: profile, error } = await supabase
+  const fetchProfileAndAvatar = async (userId) => {
+    try {
+      const { data: profile } = await supabase
         .from("profiles")
         .select("avatar_url")
         .eq("id", userId)
@@ -28,39 +28,48 @@ export default function Navbar() {
 
         setAvatarUrl(data.publicUrl);
       }
-      const initializeUser = async () => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          setUser(user);
-          fetchProfileAndAvatar(user.id);
-        }
-      };
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-      initializeUser();
-
+  useEffect(() => {
+    const initializeUser = async () => {
       const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        if (currentUser) {
-          fetchProfileAndAvatar(currentUser.id);
-        } else {
-          setAvatarUrl(null);
-        }
-      });
-
-      return () => subscription.unsubscribe();
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        fetchProfileAndAvatar(user.id);
+      }
     };
-  }, [supabase]);
+
+    initializeUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        fetchProfileAndAvatar(currentUser.id);
+      } else {
+        setAvatarUrl(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setMenuOpen(false);
+    setUser(null);
+    setAvatarUrl(null);
     router.push("/login");
   };
+
   const ProfilePic = ({ size = "w-8 h-8" }) => (
     <div
       className={`${size} rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border border-gray-200 shadow-sm overflow-hidden`}
@@ -72,7 +81,7 @@ export default function Navbar() {
           className="w-full h-full object-cover"
         />
       ) : (
-        <span className="text-sm">{user?.email?.[0].toUpperCase()}</span>
+        <span className="text-sm">{user?.email?.[0].toUpperCase() || "?"}</span>
       )}
     </div>
   );
