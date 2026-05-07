@@ -2,10 +2,24 @@
 
 import React from "react";
 import Link from "next/link";
-import { Login } from "@/lib/login/actions";
 import LoginButton from "@/components/Auth/LoginBtn/LoginBtn";
+import { useRouter } from "next/navigation";
+import { Login } from "@/lib/login/actions";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  async function handleSubmit(formData) {
+    const result = await Login(formData);
+
+    if (result?.error) {
+      alert(result.error);
+    } else {
+      router.refresh();
+
+      router.push("/profile");
+    }
+  }
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md bg-bg-card rounded-2xl shadow-card p-8 border border-border">
@@ -18,7 +32,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form using Server Action */}
-        <form action={Login} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1.5">
               Email Address

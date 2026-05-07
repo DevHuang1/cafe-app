@@ -19,5 +19,5 @@ export async function Login(formData) {
     return { success: false, message: error.message };
   }
   revalidatePath("/", "layout");
-  redirect("/profile");
+  return { success: true };
 }
