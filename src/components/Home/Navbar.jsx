@@ -9,24 +9,28 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [fullName, setFullName] = useState("");
 
   const supabase = createClient();
   const router = useRouter();
 
-  const fetchProfileAndAvatar = async (userId) => {
+  const fetchProfileData = async (userId) => {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("avatar_url")
+        .select("image_url, full_name")
         .eq("id", userId)
         .single();
 
-      if (profile?.avatar_url) {
-        const { data } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(profile.avatar_url);
+      if (profile) {
+        setFullName(profile.full_name || "");
 
-        setAvatarUrl(data.publicUrl);
+        if (profile.image_url) {
+          const { data } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(profile.image_url);
+          setAvatarUrl(data.publicUrl);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -40,7 +44,7 @@ export default function Navbar() {
       } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        fetchProfileAndAvatar(user.id);
+        fetchProfileData(user.id);
       }
     };
 
@@ -53,9 +57,10 @@ export default function Navbar() {
       setUser(currentUser);
 
       if (currentUser) {
-        fetchProfileAndAvatar(currentUser.id);
+        fetchProfileData(currentUser.id);
       } else {
         setAvatarUrl(null);
+        setFullName("");
       }
     });
 
@@ -67,12 +72,13 @@ export default function Navbar() {
     setMenuOpen(false);
     setUser(null);
     setAvatarUrl(null);
+    setFullName("");
     router.push("/login");
   };
 
   const ProfilePic = ({ size = "w-8 h-8" }) => (
     <div
-      className={`${size} rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border border-gray-200 shadow-sm overflow-hidden`}
+      className={`${size} rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border border-gray-200 shadow-sm overflow-hidden flex-shrink-0`}
     >
       {avatarUrl ? (
         <img
@@ -81,7 +87,11 @@ export default function Navbar() {
           className="w-full h-full object-cover"
         />
       ) : (
-        <span className="text-sm">{user?.email?.[0].toUpperCase() || "?"}</span>
+        <span className="text-sm">
+          {fullName?.[0]?.toUpperCase() ||
+            user?.email?.[0].toUpperCase() ||
+            "?"}
+        </span>
       )}
     </div>
   );
@@ -93,7 +103,6 @@ export default function Navbar() {
           MyCafe ☕
         </Link>
 
-        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 text-gray-700 font-medium">
           <Link href="/" className="hover:text-black transition">
             Home
@@ -108,12 +117,20 @@ export default function Navbar() {
           <div className="flex items-center gap-4 ml-4">
             {user ? (
               <>
-                <Link href="/profile" className="flex items-center gap-2 group">
-                  <ProfilePic size="w-9 h-9" />
-                  <span className="group-hover:text-black transition">
-                    Profile
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600">
+                    Hello,{" "}
+                    <span className="font-semibold text-black">
+                      {fullName || "User"}
+                    </span>
                   </span>
-                </Link>
+                  <Link
+                    href="/profile"
+                    className="transition transform hover:scale-105 active:scale-95"
+                  >
+                    <ProfilePic size="w-9 h-9" />
+                  </Link>
+                </div>
                 <button
                   onClick={handleSignOut}
                   className="px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition"
@@ -140,7 +157,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Toggle Button */}
         <button
           className="md:hidden text-2xl p-1"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -149,7 +165,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden px-6 py-6 flex flex-col gap-5 bg-white border-b shadow-xl">
           <Link href="/" onClick={() => setMenuOpen(false)}>
@@ -172,7 +187,9 @@ export default function Navbar() {
                 >
                   <ProfilePic size="w-12 h-12" />
                   <div className="flex flex-col">
-                    <span className="text-black font-bold">My Account</span>
+                    <span className="text-black font-bold truncate max-w-[200px]">
+                      Hello, {fullName || "User"}
+                    </span>
                     <span className="text-xs text-gray-500 truncate max-w-[200px]">
                       {user.email}
                     </span>
