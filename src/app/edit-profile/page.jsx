@@ -196,3 +196,12 @@ function InputField({ label, name, value, onChange, type = "text", disabled }) {
     </div>
   );
 }
+export default function EditProfile() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <h1 className="text-3xl font-bold">
+        Edit Profile Page Works 🎉
+      </h1>
+    </div>
+  );
+}
