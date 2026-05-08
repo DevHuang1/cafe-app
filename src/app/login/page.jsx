@@ -1,8 +1,27 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import LoginButton from "@/components/Auth/LoginBtn/LoginBtn";
+import { useRouter } from "next/navigation";
 import { Login } from "@/lib/login/actions";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const result = await Login(formData);
+
+    if (result?.error) {
+      alert(result.error);
+    } else {
+      router.refresh();
+
+      router.push("/profile");
+    }
+  }
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md bg-bg-card rounded-2xl shadow-card p-8 border border-border">
@@ -15,7 +34,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form using Server Action */}
-        <form action={Login} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1.5">
               Email Address
@@ -58,12 +77,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-3 px-4 bg-btn-gradient text-text-light font-semibold rounded-xl shadow-soft hover:opacity-90 transition-opacity active:scale-[0.98]"
-          >
-            Sign In
-          </button>
+          <LoginButton />
         </form>
 
         {/* Footer */}
