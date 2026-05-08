@@ -82,7 +82,6 @@ export default function MenuList() {
             <MenuItemCard key={item.id} item={item} />
           ))}
         </div>
-
         {filteredItems.length === 0 && (
           <p className="text-center text-gray-500 mt-20 text-lg">
             No menu items found.
