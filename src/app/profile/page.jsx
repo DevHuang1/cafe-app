@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
@@ -10,29 +11,43 @@ export default function ProfileView() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function getUser() {
-      setLoading(true);
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+    async function getUserData() {
+      try {
+        setLoading(true);
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
 
-      if (authUser) {
-        const { data, error } = await supabase
+        if (!authUser) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: profileData, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", authUser.id)
           .single();
 
-        if (!error) setUser(data);
+        if (!error) {
+          setUser(profileData);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
-    getUser();
-  }, [supabase]);
+    getUserData();
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex items-center justify-center">
-        <div className="text-[#6B4226] font-medium animate-pulse">Loading profile...</div>
+        <div className="text-[#6B4226] font-medium animate-pulse">
+          Loading profile...
+        </div>
       </div>
     );
   }
@@ -41,7 +56,9 @@ export default function ProfileView() {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex flex-col items-center justify-center py-20">
         <p className="text-xl font-bold text-[#2D2A26]">User not found.</p>
-        <Link href="/login" className="mt-4 text-[#C08A5D] hover:underline">Return to Login</Link>
+        <Link href="/login" className="mt-4 text-[#C08A5D] hover:underline">
+          Return to Login
+        </Link>
       </div>
     );
   }
@@ -49,7 +66,9 @@ export default function ProfileView() {
   return (
     <div className="min-h-screen bg-[#F6F4F2] px-4 py-10">
       <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
-        <div className="bg-gradient-to-r from-[#6B4226] to-[#8B5E3C] px-6 py-10 text-white">
+        <div
+          className={`px-6 py-10 text-white ${user.role === "staff" ? "bg-gradient-to-r from-[#3E2723] to-[#5D4037]" : "bg-gradient-to-r from-[#6B4226] to-[#8B5E3C]"}`}
+        >
           <div className="flex flex-col items-center text-center">
             <button
               onClick={() => setShowPhoto(true)}
@@ -68,9 +87,11 @@ export default function ProfileView() {
               )}
             </button>
 
-            <h1 className="mt-5 text-3xl font-bold">{user.full_name || "New User"}</h1>
-            <p className="mt-1 rounded-full bg-white/15 px-4 py-1 text-sm">
-              {user.role || "Staff"}
+            <h1 className="mt-5 text-3xl font-bold">
+              {user.full_name || "New User"}
+            </h1>
+            <p className="mt-1 rounded-full bg-white/15 px-4 py-1 text-sm uppercase tracking-wider font-semibold">
+              {user.role || "Customer"}
             </p>
 
             <Link
@@ -87,16 +108,22 @@ export default function ProfileView() {
           <p className="mt-1 text-sm text-[#6B6B6B]">
             Basic information for your cafe account.
           </p>
-          
+
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ProfileItem label="Employee ID" value={user.employee_id || user.employeeId} />
-            <ProfileItem label="Status" value={user.status} />
+            <ProfileItem
+              label="Employee ID"
+              value={user.employee_id || "N/A"}
+            />
             <ProfileItem label="Email" value={user.email} />
             <ProfileItem label="Phone" value={user.phone} />
             <ProfileItem label="Address" value={user.address} />
             <ProfileItem
               label="Joined Date"
-              value={user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
+              value={
+                user.created_at
+                  ? new Date(user.created_at).toLocaleDateString()
+                  : "N/A"
+              }
             />
           </div>
         </div>
