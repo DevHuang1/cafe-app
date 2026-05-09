@@ -11,6 +11,7 @@ export default async function Signup(formData) {
   const password = formData.get("password");
   const firstName = formData.get("firstName");
   const lastName = formData.get("lastName");
+  const role = formData.get("role") || "customer";
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -19,6 +20,7 @@ export default async function Signup(formData) {
         first_name: firstName,
         last_name: lastName,
         full_name: `${firstName} ${lastName}`,
+        role: role,
       },
     },
   });
