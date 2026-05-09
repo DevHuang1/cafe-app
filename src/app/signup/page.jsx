@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Coffee, User, ShieldCheck, Mail, Lock, BadgeId } from "lucide-react";
+import { Coffee, User, ShieldCheck, Mail, Lock, IdCard } from "lucide-react";
 
 import { createClient } from "@/utils/supabase/client";
 import Signup from "@/lib/signup/actions";
@@ -179,15 +179,15 @@ export default function SignUpPage() {
                 Staff ID Number
               </label>
               <div className="relative">
-                <BadgeId
+                <IdCard
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
                   size={18}
                 />
                 <input
-                  name="employee_id"
+                  name="staffId"
                   type="text"
                   required={role === "staff"}
-                  className="w-full pl-11 pr-4 py-3 bg-[#FFF8F1] border border-accent/20 rounded-xl focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all placeholder:text-gray-300"
+                  className="w-full pl-11 pr-4 py-3 bg-[#FFF8F1] border border-accent/20 rounded-xl outline-none transition-all placeholder:text-gray-300"
                   placeholder="e.g. STF-2024-001"
                 />
               </div>
