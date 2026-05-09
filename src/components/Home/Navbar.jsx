@@ -4,10 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import {
+  Coffee,
+  Menu as MenuIcon,
+  X,
+  LayoutDashboard,
+  User as UserIcon,
+  LogOut,
+} from "lucide-react";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [fullName, setFullName] = useState("");
 
@@ -18,12 +27,13 @@ export default function Navbar() {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("image_url, full_name")
+        .select("image_url, full_name, role")
         .eq("id", userId)
         .single();
 
       if (profile) {
         setFullName(profile.full_name || "");
+        setRole(profile.role);
 
         if (profile.image_url) {
           if (profile.image_url.startsWith("http")) {
@@ -65,6 +75,7 @@ export default function Navbar() {
       } else {
         setAvatarUrl(null);
         setFullName("");
+        setRole(null);
       }
     });
 
@@ -74,15 +85,12 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setMenuOpen(false);
-    setUser(null);
-    setAvatarUrl(null);
-    setFullName("");
     router.push("/login");
   };
 
   const ProfilePic = ({ size = "w-8 h-8" }) => (
     <div
-      className={`${size} rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border border-gray-200 shadow-sm overflow-hidden flex-shrink-0`}
+      className={`${size} rounded-full bg-[#F5F1EE] flex items-center justify-center text-accent font-bold border border-[#E8E2DA] shadow-sm overflow-hidden flex-shrink-0`}
     >
       {avatarUrl ? (
         <img
@@ -93,7 +101,7 @@ export default function Navbar() {
       ) : (
         <span className="text-sm">
           {fullName?.[0]?.toUpperCase() ||
-            user?.email?.[0].toUpperCase() ||
+            user?.email?.[0]?.toUpperCase() ||
             "?"}
         </span>
       )}
@@ -101,60 +109,67 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="w-full fixed top-0 left-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <nav className="w-full fixed top-0 left-0 z-50 bg-[#FDFCFB]/80 backdrop-blur-md border-b border-[#E8E2DA]">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold text-gray-900">
-          MyCafe ☕
+        <Link
+          href="/"
+          className="text-2xl font-serif font-bold text-[#3E2723] flex items-center gap-2"
+        >
+          <Coffee className="text-accent" />
+          <span>MyCafe</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-gray-700 font-medium">
-          <Link href="/" className="hover:text-black transition">
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-8 text-[#5D4037] font-medium text-sm uppercase tracking-wide">
+          <Link href="/" className="hover:text-accent transition">
             Home
           </Link>
-          <Link href="/menu" className="hover:text-black transition">
+          <Link href="/menu" className="hover:text-accent transition">
             Menu
           </Link>
-          <Link href="/about" className="hover:text-black transition">
-            About
-          </Link>
 
-          <div className="flex items-center gap-4 ml-4">
+          {/* --- STAFF DASHBOARD LINK --- */}
+          {role === "staff" && (
+            <Link
+              href="/staff/dashboard"
+              className="flex items-center gap-1.5 text-accent font-bold bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/10"
+            >
+              <LayoutDashboard size={16} />
+              Dashboard
+            </Link>
+          )}
+
+          <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#E8E2DA]">
             {user ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">
-                    Hello,{" "}
-                    <span className="font-semibold text-black">
-                      {fullName || "User"}
-                    </span>
-                  </span>
-                  <Link
-                    href="/profile"
-                    className="transition transform hover:scale-105 active:scale-95"
-                  >
-                    <ProfilePic size="w-9 h-9" />
-                  </Link>
-                </div>
+              <div className="flex items-center gap-4">
+                <Link href="/profile" className="flex items-center gap-3 group">
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">
+                      Member
+                    </p>
+                    <p className="text-sm font-bold text-[#3E2723] group-hover:text-accent transition">
+                      {fullName.split(" ")[0] || "Profile"}
+                    </p>
+                  </div>
+                  <ProfilePic size="w-10 h-10" />
+                </Link>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition"
+                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                 >
-                  Sign Out
+                  <LogOut size={20} />
                 </button>
-              </>
+              </div>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 hover:text-black transition"
-                >
+                <Link href="/login" className="hover:text-accent transition">
                   Login
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-5 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition"
+                  className="px-5 py-2.5 bg-accent text-white rounded-xl shadow-soft hover:bg-accent-hover transition"
                 >
-                  Sign Up
+                  Join Now
                 </Link>
               </>
             )}
@@ -162,48 +177,62 @@ export default function Navbar() {
         </div>
 
         <button
-          className="md:hidden text-2xl p-1"
+          className="md:hidden text-[#3E2723]"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          {menuOpen ? "✕" : "☰"}
+          {menuOpen ? <X size={28} /> : <MenuIcon size={28} />}
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden px-6 py-6 flex flex-col gap-5 bg-white border-b shadow-xl">
-          <Link href="/" onClick={() => setMenuOpen(false)}>
+        <div className="md:hidden px-6 py-8 flex flex-col gap-6 bg-[#FDFCFB] border-b shadow-2xl animate-in slide-in-from-top-4">
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className="text-lg font-bold"
+          >
             Home
           </Link>
-          <Link href="/menu" onClick={() => setMenuOpen(false)}>
+          <Link
+            href="/menu"
+            onClick={() => setMenuOpen(false)}
+            className="text-lg font-bold"
+          >
             Menu
           </Link>
-          <Link href="/about" onClick={() => setMenuOpen(false)}>
-            About
-          </Link>
 
-          <div className="pt-4 border-t border-gray-100">
+          {role === "staff" && (
+            <Link
+              href="/staff/dashboard"
+              onClick={() => setMenuOpen(false)}
+              className="text-lg font-bold text-accent"
+            >
+              Staff Dashboard
+            </Link>
+          )}
+
+          <div className="pt-6 border-t border-[#E8E2DA]">
             {user ? (
               <div className="flex flex-col gap-4">
                 <Link
                   href="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl"
+                  className="flex items-center gap-4 p-4 bg-[#F5F1EE] rounded-2xl"
                 >
-                  <ProfilePic size="w-12 h-12" />
-                  <div className="flex flex-col">
-                    <span className="text-black font-bold truncate max-w-[200px]">
-                      Hello, {fullName || "User"}
-                    </span>
-                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                      {user.email}
-                    </span>
+                  <ProfilePic size="w-14 h-14" />
+                  <div>
+                    <p className="text-[#3E2723] font-bold">
+                      {fullName || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold"
+                  className="w-full py-4 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"
                 >
-                  Sign Out
+                  <LogOut size={18} /> Sign Out
                 </button>
               </div>
             ) : (
@@ -211,14 +240,14 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="w-full py-3 border border-gray-200 rounded-xl text-center font-bold"
+                  className="w-full py-4 border border-[#E8E2DA] rounded-xl text-center font-bold"
                 >
                   Login
                 </Link>
                 <Link
                   href="/signup"
                   onClick={() => setMenuOpen(false)}
-                  className="w-full py-3 bg-black text-white rounded-xl text-center font-bold"
+                  className="w-full py-4 bg-accent text-white rounded-xl text-center font-bold"
                 >
                   Sign Up
                 </Link>
