@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -23,67 +23,73 @@ export default function Navbar() {
   const supabase = createClient();
   const router = useRouter();
 
-  const fetchProfileData = async (userId) => {
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("image_url, full_name, role")
-        .eq("id", userId)
-        .single();
+  const fetchProfileData = useCallback(
+    async (userId) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("image_url, full_name, role")
+          .eq("id", userId)
+          .single();
 
-      if (profile) {
-        setFullName(profile.full_name || "");
-        setRole(profile.role);
+        if (error) throw error;
 
-        if (profile.image_url) {
-          if (profile.image_url.startsWith("http")) {
-            setAvatarUrl(profile.image_url);
-          } else {
-            const { data } = supabase.storage
-              .from("avatars")
-              .getPublicUrl(profile.image_url);
-            setAvatarUrl(data.publicUrl);
+        if (profile) {
+          setFullName(profile.full_name || "");
+          setRole(profile.role);
+
+          if (profile.image_url) {
+            if (profile.image_url.startsWith("http")) {
+              setAvatarUrl(profile.image_url);
+            } else {
+              const { data } = supabase.storage
+                .from("avatars")
+                .getPublicUrl(profile.image_url);
+              setAvatarUrl(data.publicUrl);
+            }
           }
         }
+      } catch (err) {
+        console.error("Error fetching nav profile:", err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    },
+    [supabase],
+  );
 
   useEffect(() => {
-    const initializeUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser(user);
         fetchProfileData(user.id);
       }
-    };
-
-    initializeUser();
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
 
-      if (currentUser) {
-        await fetchProfileData(currentUser.id);
-      } else {
+      if (event === "SIGNED_IN") {
+        setUser(currentUser);
+        if (currentUser) await fetchProfileData(currentUser.id);
+        router.refresh();
+      }
+
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setRole(null);
         setAvatarUrl(null);
         setFullName("");
-        setRole(null);
-      }
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         router.refresh();
+      }
+
+      if (event === "USER_UPDATED") {
+        if (currentUser) fetchProfileData(currentUser.id);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [router, supabase]);
+  }, [supabase, router, fetchProfileData]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -122,7 +128,6 @@ export default function Navbar() {
           <span>MyCafe</span>
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-[#5D4037] font-medium text-sm uppercase tracking-wide">
           <Link href="/" className="hover:text-accent transition">
             Home
@@ -131,7 +136,6 @@ export default function Navbar() {
             Menu
           </Link>
 
-          {/* --- STAFF DASHBOARD LINK --- */}
           {role === "staff" && (
             <Link
               href="/staff/dashboard"
@@ -187,7 +191,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden px-6 py-8 flex flex-col gap-6 bg-[#FDFCFB] border-b shadow-2xl animate-in slide-in-from-top-4">
           <Link
@@ -204,7 +207,6 @@ export default function Navbar() {
           >
             Menu
           </Link>
-
           {role === "staff" && (
             <Link
               href="/staff/dashboard"
@@ -214,7 +216,6 @@ export default function Navbar() {
               Staff Dashboard
             </Link>
           )}
-
           <div className="pt-6 border-t border-[#E8E2DA]">
             {user ? (
               <div className="flex flex-col gap-4">
