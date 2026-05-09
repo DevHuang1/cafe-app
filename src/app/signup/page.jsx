@@ -184,7 +184,7 @@ export default function SignUpPage() {
                   size={18}
                 />
                 <input
-                  name="staffId"
+                  name="employee_id"
                   type="text"
                   required={role === "staff"}
                   className="w-full pl-11 pr-4 py-3 bg-[#FFF8F1] border border-accent/20 rounded-xl outline-none transition-all placeholder:text-gray-300"
