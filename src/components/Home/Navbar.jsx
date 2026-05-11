@@ -16,11 +16,7 @@ const supabase = createClient();
 
 export default function Navbar({ serverUser, serverProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState(serverUser);
-  const [role, setRole] = useState(serverProfile?.role || null);
-  const [fullName, setFullName] = useState(serverProfile?.full_name || "");
   const [avatarUrl, setAvatarUrl] = useState(null);
-
   const router = useRouter();
 
   const getAvatar = useCallback((path) => {
@@ -30,55 +26,21 @@ export default function Navbar({ serverUser, serverProfile }) {
     return data.publicUrl;
   }, []);
 
-  const updateLocalState = useCallback(
-    async (currentUser) => {
-      if (!currentUser) {
-        setUser(null);
-        setRole(null);
-        setFullName("");
-        setAvatarUrl(null);
-        return;
-      }
-
-      setUser(currentUser);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("image_url, full_name, role")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-
-      if (profile) {
-        setRole(profile.role);
-        setFullName(profile.full_name || "");
-        setAvatarUrl(getAvatar(profile.image_url));
-      }
-    },
-    [getAvatar],
-  );
-
   useEffect(() => {
-    setUser(serverUser);
-    setRole(serverProfile?.role || null);
-    setFullName(serverProfile?.full_name || "");
     setAvatarUrl(getAvatar(serverProfile?.image_url));
-  }, [serverUser, serverProfile, getAvatar]);
+  }, [serverProfile, getAvatar]);
 
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        await updateLocalState(session?.user);
-        router.refresh();
-      }
-      if (event === "SIGNED_OUT") {
-        updateLocalState(null);
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         router.refresh();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [router, updateLocalState]);
+  }, [router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -98,8 +60,8 @@ export default function Navbar({ serverUser, serverProfile }) {
         />
       ) : (
         <span className="text-sm">
-          {fullName?.[0]?.toUpperCase() ||
-            user?.email?.[0]?.toUpperCase() ||
+          {serverProfile?.full_name?.[0]?.toUpperCase() ||
+            serverUser?.email?.[0]?.toUpperCase() ||
             "?"}
         </span>
       )}
@@ -124,7 +86,8 @@ export default function Navbar({ serverUser, serverProfile }) {
           <Link href="/menu" className="hover:text-[#C08A5D] transition">
             Menu
           </Link>
-          {role === "staff" && (
+
+          {serverProfile?.role === "staff" && (
             <Link
               href="/staff/dashboard"
               className="flex items-center gap-1.5 text-[#C08A5D] font-bold bg-[#C08A5D]/5 px-3 py-1.5 rounded-lg border border-[#C08A5D]/10"
@@ -133,8 +96,9 @@ export default function Navbar({ serverUser, serverProfile }) {
               Dashboard
             </Link>
           )}
+
           <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#E8E2DA]">
-            {user ? (
+            {serverUser ? (
               <div className="flex items-center gap-4">
                 <Link href="/profile" className="flex items-center gap-3 group">
                   <div className="text-right">
@@ -142,7 +106,7 @@ export default function Navbar({ serverUser, serverProfile }) {
                       Member
                     </p>
                     <p className="text-sm font-bold text-[#3E2723] group-hover:text-[#C08A5D] transition">
-                      {fullName.split(" ")[0] || "Profile"}
+                      {serverProfile?.full_name?.split(" ")[0] || "Profile"}
                     </p>
                   </div>
                   <ProfilePic size="w-10 h-10" />
@@ -179,7 +143,7 @@ export default function Navbar({ serverUser, serverProfile }) {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden px-6 py-8 flex flex-col gap-6 bg-[#FDFCFB] border-b shadow-2xl animate-in slide-in-from-top-4">
+        <div className="md:hidden px-6 py-8 flex flex-col gap-6 bg-[#FDFCFB] border-b shadow-2xl">
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
@@ -194,57 +158,46 @@ export default function Navbar({ serverUser, serverProfile }) {
           >
             Menu
           </Link>
-          {role === "staff" && (
-            <Link
-              href="/staff/dashboard"
-              onClick={() => setMenuOpen(false)}
-              className="text-lg font-bold text-[#C08A5D]"
-            >
-              Staff Dashboard
-            </Link>
+          {serverUser ? (
+            <div className="flex flex-col gap-4 pt-6 border-t border-[#E8E2DA]">
+              <Link
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-4 p-4 bg-[#F5F1EE] rounded-2xl"
+              >
+                <ProfilePic size="w-14 h-14" />
+                <div>
+                  <p className="text-[#3E2723] font-bold">
+                    {serverProfile?.full_name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">{serverUser.email}</p>
+                </div>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="w-full py-4 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"
+              >
+                <LogOut size={18} /> Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 pt-6 border-t border-[#E8E2DA]">
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="w-full py-4 border border-[#E8E2DA] rounded-xl text-center font-bold"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMenuOpen(false)}
+                className="w-full py-4 bg-[#C08A5D] text-white rounded-xl text-center font-bold"
+              >
+                Sign Up
+              </Link>
+            </div>
           )}
-          <div className="pt-6 border-t border-[#E8E2DA]">
-            {user ? (
-              <div className="flex flex-col gap-4">
-                <Link
-                  href="/profile"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-4 p-4 bg-[#F5F1EE] rounded-2xl"
-                >
-                  <ProfilePic size="w-14 h-14" />
-                  <div>
-                    <p className="text-[#3E2723] font-bold">
-                      {fullName || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  </div>
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full py-4 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"
-                >
-                  <LogOut size={18} /> Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full py-4 border border-[#E8E2DA] rounded-xl text-center font-bold"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full py-4 bg-[#C08A5D] text-white rounded-xl text-center font-bold"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
         </div>
       )}
     </nav>
