@@ -12,6 +12,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+const supabase = createClient();
+
 export default function Navbar({ serverUser, serverProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(serverUser);
@@ -19,10 +21,13 @@ export default function Navbar({ serverUser, serverProfile }) {
   const [fullName, setFullName] = useState(serverProfile?.full_name || "");
   const [avatarUrl, setAvatarUrl] = useState(null);
 
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
+    setUser(serverUser);
+    setRole(serverProfile?.role || null);
+    setFullName(serverProfile?.full_name || "");
+
     if (serverProfile?.image_url) {
       if (serverProfile.image_url.startsWith("http")) {
         setAvatarUrl(serverProfile.image_url);
@@ -32,8 +37,10 @@ export default function Navbar({ serverUser, serverProfile }) {
           .getPublicUrl(serverProfile.image_url);
         setAvatarUrl(data.publicUrl);
       }
+    } else {
+      setAvatarUrl(null);
     }
-  }, [serverProfile, supabase]);
+  }, [serverUser, serverProfile]);
 
   useEffect(() => {
     const {
@@ -49,7 +56,7 @@ export default function Navbar({ serverUser, serverProfile }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  }, [router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -95,7 +102,6 @@ export default function Navbar({ serverUser, serverProfile }) {
           <Link href="/menu" className="hover:text-accent transition">
             Menu
           </Link>
-
           {role === "staff" && (
             <Link
               href="/staff/dashboard"
@@ -105,7 +111,6 @@ export default function Navbar({ serverUser, serverProfile }) {
               Dashboard
             </Link>
           )}
-
           <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#E8E2DA]">
             {user ? (
               <div className="flex items-center gap-4">
