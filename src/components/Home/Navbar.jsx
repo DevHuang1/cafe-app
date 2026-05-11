@@ -29,7 +29,6 @@ export default function Navbar({ serverUser, serverProfile }) {
     setFullName(serverProfile?.full_name || "");
 
     const rawUrl = serverProfile?.image_url;
-
     if (rawUrl) {
       if (rawUrl.startsWith("http")) {
         setAvatarUrl(rawUrl);
@@ -41,6 +40,7 @@ export default function Navbar({ serverUser, serverProfile }) {
       setAvatarUrl(null);
     }
   }, [serverUser, serverProfile]);
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -53,7 +53,6 @@ export default function Navbar({ serverUser, serverProfile }) {
         router.refresh();
       }
     });
-
     return () => subscription.unsubscribe();
   }, [router]);
 
@@ -65,7 +64,7 @@ export default function Navbar({ serverUser, serverProfile }) {
 
   const ProfilePic = ({ size = "w-8 h-8" }) => (
     <div
-      className={`${size} rounded-full bg-[#F5F1EE] flex items-center justify-center text-accent font-bold border border-[#E8E2DA] shadow-sm overflow-hidden flex-shrink-0`}
+      className={`${size} rounded-full bg-[#F5F1EE] flex items-center justify-center text-[#6B4226] font-bold border border-[#E8E2DA] shadow-sm overflow-hidden flex-shrink-0`}
     >
       {avatarUrl ? (
         <img
@@ -90,21 +89,21 @@ export default function Navbar({ serverUser, serverProfile }) {
           href="/"
           className="text-2xl font-serif font-bold text-[#3E2723] flex items-center gap-2"
         >
-          <Coffee className="text-accent" />
+          <Coffee className="text-[#C08A5D]" />
           <span>MyCafe</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-[#5D4037] font-medium text-sm uppercase tracking-wide">
-          <Link href="/" className="hover:text-accent transition">
+          <Link href="/" className="hover:text-[#C08A5D] transition">
             Home
           </Link>
-          <Link href="/menu" className="hover:text-accent transition">
+          <Link href="/menu" className="hover:text-[#C08A5D] transition">
             Menu
           </Link>
           {role === "staff" && (
             <Link
               href="/staff/dashboard"
-              className="flex items-center gap-1.5 text-accent font-bold bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/10"
+              className="flex items-center gap-1.5 text-[#C08A5D] font-bold bg-[#C08A5D]/5 px-3 py-1.5 rounded-lg border border-[#C08A5D]/10"
             >
               <LayoutDashboard size={16} />
               Dashboard
@@ -118,7 +117,7 @@ export default function Navbar({ serverUser, serverProfile }) {
                     <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">
                       Member
                     </p>
-                    <p className="text-sm font-bold text-[#3E2723] group-hover:text-accent transition">
+                    <p className="text-sm font-bold text-[#3E2723] group-hover:text-[#C08A5D] transition">
                       {fullName.split(" ")[0] || "Profile"}
                     </p>
                   </div>
@@ -133,12 +132,12 @@ export default function Navbar({ serverUser, serverProfile }) {
               </div>
             ) : (
               <>
-                <Link href="/login" className="hover:text-accent transition">
+                <Link href="/login" className="hover:text-[#C08A5D] transition">
                   Login
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-5 py-2.5 bg-accent text-white rounded-xl shadow-soft hover:bg-accent-hover transition"
+                  className="px-5 py-2.5 bg-[#C08A5D] text-white rounded-xl shadow-soft hover:bg-[#A8744B] transition"
                 >
                   Join Now
                 </Link>
@@ -175,7 +174,7 @@ export default function Navbar({ serverUser, serverProfile }) {
             <Link
               href="/staff/dashboard"
               onClick={() => setMenuOpen(false)}
-              className="text-lg font-bold text-accent"
+              className="text-lg font-bold text-[#C08A5D]"
             >
               Staff Dashboard
             </Link>
@@ -215,7 +214,7 @@ export default function Navbar({ serverUser, serverProfile }) {
                 <Link
                   href="/signup"
                   onClick={() => setMenuOpen(false)}
-                  className="w-full py-4 bg-accent text-white rounded-xl text-center font-bold"
+                  className="w-full py-4 bg-[#C08A5D] text-white rounded-xl text-center font-bold"
                 >
                   Sign Up
                 </Link>
