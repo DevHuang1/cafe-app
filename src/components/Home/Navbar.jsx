@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -23,38 +23,62 @@ export default function Navbar({ serverUser, serverProfile }) {
 
   const router = useRouter();
 
+  const getAvatar = useCallback((path) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    return data.publicUrl;
+  }, []);
+
+  const updateLocalState = useCallback(
+    async (currentUser) => {
+      if (!currentUser) {
+        setUser(null);
+        setRole(null);
+        setFullName("");
+        setAvatarUrl(null);
+        return;
+      }
+
+      setUser(currentUser);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("image_url, full_name, role")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (profile) {
+        setRole(profile.role);
+        setFullName(profile.full_name || "");
+        setAvatarUrl(getAvatar(profile.image_url));
+      }
+    },
+    [getAvatar],
+  );
+
   useEffect(() => {
     setUser(serverUser);
     setRole(serverProfile?.role || null);
     setFullName(serverProfile?.full_name || "");
-
-    const rawUrl = serverProfile?.image_url;
-    if (rawUrl) {
-      if (rawUrl.startsWith("http")) {
-        setAvatarUrl(rawUrl);
-      } else {
-        const { data } = supabase.storage.from("avatars").getPublicUrl(rawUrl);
-        setAvatarUrl(data.publicUrl);
-      }
-    } else {
-      setAvatarUrl(null);
-    }
-  }, [serverUser, serverProfile]);
+    setAvatarUrl(getAvatar(serverProfile?.image_url));
+  }, [serverUser, serverProfile, getAvatar]);
 
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
-      if (
-        event === "SIGNED_IN" ||
-        event === "SIGNED_OUT" ||
-        event === "USER_UPDATED"
-      ) {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        await updateLocalState(session?.user);
+        router.refresh();
+      }
+      if (event === "SIGNED_OUT") {
+        updateLocalState(null);
         router.refresh();
       }
     });
+
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, updateLocalState]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
