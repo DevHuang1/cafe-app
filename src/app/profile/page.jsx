@@ -8,29 +8,41 @@ export default function ProfileView() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPhoto, setShowPhoto] = useState(false);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState(null);
   const supabase = createClient();
 
   useEffect(() => {
     async function getUserData() {
       try {
-        setLoading(true);
         const {
           data: { user: authUser },
+          error: authError,
         } = await supabase.auth.getUser();
 
-        if (!authUser) {
+        if (authError || !authUser) {
           setLoading(false);
           return;
         }
 
-        const { data: profileData, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", authUser.id)
-          .single();
+          .maybeSingle();
 
-        if (!error) {
+        if (profileData) {
           setUser(profileData);
+
+          if (profileData.image_url) {
+            if (profileData.image_url.startsWith("http")) {
+              setResolvedImageUrl(profileData.image_url);
+            } else {
+              const { data } = supabase.storage
+                .from("avatars")
+                .getPublicUrl(profileData.image_url);
+              setResolvedImageUrl(data.publicUrl);
+            }
+          }
         }
       } catch (err) {
         console.error(err);
@@ -40,13 +52,14 @@ export default function ProfileView() {
     }
 
     getUserData();
-  }, []);
+  }, [supabase]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex items-center justify-center">
-        <div className="text-[#6B4226] font-medium animate-pulse">
-          Loading profile...
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#C08A5D] border-t-transparent"></div>
+          <div className="text-[#6B4226] font-medium">Loading profile...</div>
         </div>
       </div>
     );
@@ -55,9 +68,12 @@ export default function ProfileView() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[#F6F4F2] flex flex-col items-center justify-center py-20">
-        <p className="text-xl font-bold text-[#2D2A26]">User not found.</p>
-        <Link href="/login" className="mt-4 text-[#C08A5D] hover:underline">
-          Return to Login
+        <p className="text-xl font-bold text-[#2D2A26]">Profile not found.</p>
+        <Link
+          href="/edit-profile"
+          className="mt-6 rounded-xl bg-[#C08A5D] px-6 py-2.5 font-semibold text-white transition hover:bg-[#A8744B]"
+        >
+          Set Up Profile
         </Link>
       </div>
     );
@@ -71,12 +87,12 @@ export default function ProfileView() {
         >
           <div className="flex flex-col items-center text-center">
             <button
-              onClick={() => setShowPhoto(true)}
+              onClick={() => resolvedImageUrl && setShowPhoto(true)}
               className="h-28 w-28 overflow-hidden rounded-full border-4 border-white/40 bg-[#C08A5D] shadow-lg transition hover:scale-105"
             >
-              {user.image_url ? (
+              {resolvedImageUrl ? (
                 <img
-                  src={user.image_url}
+                  src={resolvedImageUrl}
                   alt={user.full_name}
                   className="h-full w-full object-cover"
                 />
@@ -105,15 +121,8 @@ export default function ProfileView() {
 
         <div className="p-6 sm:p-8">
           <h2 className="text-xl font-bold text-[#2D2A26]">Account Details</h2>
-          <p className="mt-1 text-sm text-[#6B6B6B]">
-            Basic information for your cafe account.
-          </p>
-
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ProfileItem
-              label="Employee ID"
-              value={user.employee_id || "N/A"}
-            />
+            <ProfileItem label="Employee ID" value={user.employee_id} />
             <ProfileItem label="Email" value={user.email} />
             <ProfileItem label="Phone" value={user.phone} />
             <ProfileItem label="Address" value={user.address} />
@@ -129,13 +138,13 @@ export default function ProfileView() {
         </div>
       </div>
 
-      {showPhoto && user.image_url && (
+      {showPhoto && resolvedImageUrl && (
         <div
           onClick={() => setShowPhoto(false)}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-pointer"
         >
           <img
-            src={user.image_url}
+            src={resolvedImageUrl}
             alt={user.full_name}
             className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
           />
