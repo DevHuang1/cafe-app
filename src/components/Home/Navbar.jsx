@@ -28,20 +28,19 @@ export default function Navbar({ serverUser, serverProfile }) {
     setRole(serverProfile?.role || null);
     setFullName(serverProfile?.full_name || "");
 
-    if (serverProfile?.image_url) {
-      if (serverProfile.image_url.startsWith("http")) {
-        setAvatarUrl(serverProfile.image_url);
+    const rawUrl = serverProfile?.image_url;
+
+    if (rawUrl) {
+      if (rawUrl.startsWith("http")) {
+        setAvatarUrl(rawUrl);
       } else {
-        const { data } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(serverProfile.image_url);
+        const { data } = supabase.storage.from("avatars").getPublicUrl(rawUrl);
         setAvatarUrl(data.publicUrl);
       }
     } else {
       setAvatarUrl(null);
     }
   }, [serverUser, serverProfile]);
-
   useEffect(() => {
     const {
       data: { subscription },
