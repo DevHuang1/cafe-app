@@ -3,6 +3,8 @@ import "./globals.css";
 import Navbar from "@/components/Home/Navbar";
 import { createClient } from "@/utils/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
