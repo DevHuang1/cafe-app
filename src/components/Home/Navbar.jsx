@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -9,87 +9,47 @@ import {
   Menu as MenuIcon,
   X,
   LayoutDashboard,
-  User as UserIcon,
   LogOut,
 } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ serverUser, serverProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
+  const [user, setUser] = useState(serverUser);
+  const [role, setRole] = useState(serverProfile?.role || null);
+  const [fullName, setFullName] = useState(serverProfile?.full_name || "");
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [fullName, setFullName] = useState("");
 
   const supabase = createClient();
   const router = useRouter();
 
-  const fetchProfileData = useCallback(
-    async (userId) => {
-      try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("image_url, full_name, role")
-          .eq("id", userId)
-          .single();
-
-        if (error) throw error;
-
-        if (profile) {
-          setFullName(profile.full_name || "");
-          setRole(profile.role);
-
-          if (profile.image_url) {
-            if (profile.image_url.startsWith("http")) {
-              setAvatarUrl(profile.image_url);
-            } else {
-              const { data } = supabase.storage
-                .from("avatars")
-                .getPublicUrl(profile.image_url);
-              setAvatarUrl(data.publicUrl);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching nav profile:", err);
+  useEffect(() => {
+    if (serverProfile?.image_url) {
+      if (serverProfile.image_url.startsWith("http")) {
+        setAvatarUrl(serverProfile.image_url);
+      } else {
+        const { data } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(serverProfile.image_url);
+        setAvatarUrl(data.publicUrl);
       }
-    },
-    [supabase],
-  );
+    }
+  }, [serverProfile, supabase]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-        fetchProfileData(user.id);
-      }
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const currentUser = session?.user ?? null;
-
-      if (event === "SIGNED_IN") {
-        setUser(currentUser);
-        if (currentUser) await fetchProfileData(currentUser.id);
+    } = supabase.auth.onAuthStateChange(async (event) => {
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "USER_UPDATED"
+      ) {
         router.refresh();
-      }
-
-      if (event === "SIGNED_OUT") {
-        setUser(null);
-        setRole(null);
-        setAvatarUrl(null);
-        setFullName("");
-        router.refresh();
-      }
-
-      if (event === "USER_UPDATED") {
-        if (currentUser) fetchProfileData(currentUser.id);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, router, fetchProfileData]);
+  }, [supabase, router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
