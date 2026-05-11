@@ -8,15 +8,18 @@ export async function Login(formData) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  const data = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
+
   revalidatePath("/", "layout");
   return { success: true };
 }

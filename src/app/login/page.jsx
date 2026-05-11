@@ -20,12 +20,15 @@ export default function LoginPage() {
     const formData = new FormData(event.currentTarget);
     const result = await Login(formData);
 
-    if (result?.error) {
+    if (!result?.success) {
       setError(result.error);
       setIsLoading(false);
     } else {
       router.refresh();
-      router.push("/profile");
+
+      setTimeout(() => {
+        router.push("/profile");
+      }, 50);
     }
   }
 
