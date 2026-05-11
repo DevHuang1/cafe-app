@@ -21,19 +21,24 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  let user = null;
   let profile = null;
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("image_url, full_name, role")
-      .eq("id", user.id)
-      .maybeSingle();
-    profile = data;
+
+  try {
+    const supabase = await createClient();
+    const { data: authData } = await supabase.auth.getUser();
+    user = authData?.user || null;
+
+    if (user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("image_url, full_name, role")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = profileData;
+    }
+  } catch (error) {
+    console.error("Layout fetch error:", error);
   }
 
   return (
