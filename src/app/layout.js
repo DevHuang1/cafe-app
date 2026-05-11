@@ -21,19 +21,24 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  let user = null;
   let profile = null;
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("image_url, full_name, role")
-      .eq("id", user.id)
-      .single();
-    profile = data;
+
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+
+    if (user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("image_url, full_name, role")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = profileData;
+    }
+  } catch (e) {
+    console.error("Auth error in layout:", e);
   }
 
   return (
@@ -42,7 +47,7 @@ export default async function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar serverUser={user} serverProfile={profile} />
+        <Navbar serverUser="{user}" serverProfile="{profile}" />
         <main className="flex-grow pt-20">{children}</main>
       </body>
     </html>
