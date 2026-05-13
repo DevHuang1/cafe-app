@@ -1,4 +1,3 @@
-// import CartList from "../../components/CartList";
 import CartSummary from "@/components/Cart/CartSummary";
 export default function CartPage() {
   const cartItems = [
@@ -11,7 +10,6 @@ export default function CartPage() {
 
   return (
     <>
-      {/* <CartList /> */}
       <CartSummary cartItems={cartItems} />
     </>
   );
