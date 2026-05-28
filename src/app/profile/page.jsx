@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
+const supabase = createClient();
+
 export default function ProfileView() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPhoto, setShowPhoto] = useState(false);
   const [resolvedImageUrl, setResolvedImageUrl] = useState(null);
-  const supabase = createClient();
 
   useEffect(() => {
     async function getUserData() {
@@ -52,7 +53,7 @@ export default function ProfileView() {
     }
 
     getUserData();
-  }, [supabase]);
+  }, []);
 
   if (loading) {
     return (
