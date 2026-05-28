@@ -14,10 +14,18 @@ import {
 
 const supabase = createClient();
 
-export default function Navbar({ serverUser, serverProfile }) {
+export default function Navbar({ initialUser, initialProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const router = useRouter();
+
+  const [user, setUser] = useState(initialUser);
+  const [profile, setProfile] = useState(initialProfile);
+
+  useEffect(() => {
+    setUser(initialUser);
+    setProfile(initialProfile);
+  }, [initialUser, initialProfile]);
 
   const getAvatar = useCallback((path) => {
     if (!path) return null;
@@ -27,14 +35,29 @@ export default function Navbar({ serverUser, serverProfile }) {
   }, []);
 
   useEffect(() => {
-    setAvatarUrl(getAvatar(serverProfile?.image_url));
-  }, [serverProfile, getAvatar]);
+    setAvatarUrl(getAvatar(profile?.image_url));
+  }, [profile, getAvatar]);
 
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        setUser(session.user);
+
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("image_url, full_name, role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        setProfile(profileData);
+        router.refresh();
+      }
+
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setProfile(null);
         router.refresh();
       }
     });
@@ -43,9 +66,12 @@ export default function Navbar({ serverUser, serverProfile }) {
   }, [router]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
     setMenuOpen(false);
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
     router.push("/login");
+    router.refresh();
   };
 
   const ProfilePic = ({ size = "w-8 h-8" }) => (
@@ -60,8 +86,8 @@ export default function Navbar({ serverUser, serverProfile }) {
         />
       ) : (
         <span className="text-sm">
-          {serverProfile?.full_name?.[0]?.toUpperCase() ||
-            serverUser?.email?.[0]?.toUpperCase() ||
+          {profile?.full_name?.[0]?.toUpperCase() ||
+            user?.email?.[0]?.toUpperCase() ||
             "?"}
         </span>
       )}
@@ -87,7 +113,7 @@ export default function Navbar({ serverUser, serverProfile }) {
             Menu
           </Link>
 
-          {serverProfile?.role === "staff" && (
+          {profile?.role === "staff" && (
             <Link
               href="/staff/dashboard"
               className="flex items-center gap-1.5 text-[#C08A5D] font-bold bg-[#C08A5D]/5 px-3 py-1.5 rounded-lg border border-[#C08A5D]/10"
@@ -98,7 +124,7 @@ export default function Navbar({ serverUser, serverProfile }) {
           )}
 
           <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#E8E2DA]">
-            {serverUser ? (
+            {user ? (
               <div className="flex items-center gap-4">
                 <Link href="/profile" className="flex items-center gap-3 group">
                   <div className="text-right">
@@ -106,7 +132,7 @@ export default function Navbar({ serverUser, serverProfile }) {
                       Member
                     </p>
                     <p className="text-sm font-bold text-[#3E2723] group-hover:text-[#C08A5D] transition">
-                      {serverProfile?.full_name?.split(" ")[0] || "Profile"}
+                      {profile?.full_name?.split(" ")[0] || "Profile"}
                     </p>
                   </div>
                   <ProfilePic size="w-10 h-10" />
@@ -158,7 +184,7 @@ export default function Navbar({ serverUser, serverProfile }) {
           >
             Menu
           </Link>
-          {serverUser ? (
+          {user ? (
             <div className="flex flex-col gap-4 pt-6 border-t border-[#E8E2DA]">
               <Link
                 href="/profile"
@@ -168,9 +194,9 @@ export default function Navbar({ serverUser, serverProfile }) {
                 <ProfilePic size="w-14 h-14" />
                 <div>
                   <p className="text-[#3E2723] font-bold">
-                    {serverProfile?.full_name || "User"}
+                    {profile?.full_name || "User"}
                   </p>
-                  <p className="text-xs text-gray-500">{serverUser.email}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
               </Link>
               <button
