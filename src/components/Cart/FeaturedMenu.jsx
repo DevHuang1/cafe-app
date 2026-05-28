@@ -12,11 +12,7 @@ export default function FeaturedMenu() {
   useEffect(() => {
     async function fetchMenu() {
       try {
-        const { data, error } = await supabase
-          .from("menu_items")
-          .select("*")
-
-          .limit(5);
+        const { data, error } = await supabase.from("menu_items").select("*");
 
         if (error) throw error;
 
