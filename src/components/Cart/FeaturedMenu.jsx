@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,14 +10,22 @@ const supabase = createClient();
 export default function FeaturedMenu({ activeCategory, searchTerm }) {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const addItem = useCartStore((state) => state.addItem);
   const [errorMessage, setErrorMessage] = useState(null);
+  const addItem = useCartStore((state) => state.addItem);
 
   useEffect(() => {
     async function fetchMenu() {
       try {
         const { data, error } = await supabase.from("menu_items").select("*");
-        if (error) throw error;
+
+        if (error) {
+          console.error("Supabase error code:", error.code);
+          console.error("Supabase error message:", error.message);
+          console.error("Supabase error hint:", error.hint);
+          console.error("Supabase error details:", error.details);
+          throw error;
+        }
+
         if (data) {
           const itemsWithImages = data.map((item) => {
             let publicUrl = null;
@@ -31,8 +40,13 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
           setMenuItems(itemsWithImages);
         }
       } catch (err) {
-        console.error("Error fetching menu items:", err);
-        setErrorMessage(err.message || "Could not connect to database");
+        const msg =
+          err?.message ||
+          err?.error_description ||
+          err?.hint ||
+          JSON.stringify(err);
+        console.error("Real Supabase error:", msg);
+        setErrorMessage(msg || "Could not connect to database");
       } finally {
         setLoading(false);
       }
@@ -40,27 +54,24 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
     fetchMenu();
   }, []);
 
-  // Filter by category and search
   const filtered = menuItems.filter((item) => {
     const matchCategory =
       !activeCategory || activeCategory === "All"
         ? true
         : item.category?.toLowerCase() === activeCategory.toLowerCase();
-    const matchSearch =
-      !searchTerm
-        ? true
-        : item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = !searchTerm
+      ? true
+      : item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchCategory && matchSearch;
   });
 
   return (
     <section>
-
-      {/* Error */}
+      {/* Error — now shows real message */}
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl mb-8 text-center font-medium">
-          ⚠️ {errorMessage}. Open your browser inspector console for deep logs.
+          ⚠️ {errorMessage}
         </div>
       )}
 
@@ -78,14 +89,12 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <span className="text-6xl mb-4">☕</span>
           <h3 className="text-xl font-bold text-[#3E2723] mb-2">No items found</h3>
           <p className="text-[#957261]">Try a different category or search term</p>
         </div>
       ) : (
-        /* Menu cards */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {filtered.map((item) => {
             const rawPrice =
@@ -100,7 +109,7 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
               <div
                 key={item.id}
                 className="group bg-white rounded-3xl overflow-hidden border border-[#E8E2DA] hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                style={{ boxShadow: '0 2px 12px rgba(139,94,60,0.08)' }}
+                style={{ boxShadow: "0 2px 12px rgba(139,94,60,0.08)" }}
               >
                 {/* Image */}
                 <div className="h-56 relative overflow-hidden bg-gray-100">
@@ -115,13 +124,17 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
                       ☕
                     </div>
                   )}
-                  <div className="absolute top-4 right-4 bg-white text-[#8B5E3C] text-xs font-bold px-3 py-1 rounded-full shadow"
-                    style={{ border: '1px solid rgba(139,94,60,0.2)' }}>
+                  <div
+                    className="absolute top-4 right-4 bg-white text-[#8B5E3C] text-xs font-bold px-3 py-1 rounded-full shadow"
+                    style={{ border: "1px solid rgba(139,94,60,0.2)" }}
+                  >
                     Featured
                   </div>
                   {item.category && (
-                    <div className="absolute top-4 left-4 text-white text-xs font-bold px-3 py-1 rounded-full"
-                      style={{ background: 'rgba(139,94,60,0.75)', backdropFilter: 'blur(4px)' }}>
+                    <div
+                      className="absolute top-4 left-4 text-white text-xs font-bold px-3 py-1 rounded-full"
+                      style={{ background: "rgba(139,94,60,0.75)", backdropFilter: "blur(4px)" }}
+                    >
                       {item.category}
                     </div>
                   )}
@@ -138,24 +151,30 @@ export default function FeaturedMenu({ activeCategory, searchTerm }) {
                     </span>
                   </div>
 
-                  <p className="text-[#957261] leading-relaxed mb-6 text-sm min-h-[44px]">
+                  <p className="text-[#957261] leading-relaxed mb-6 text-sm min-h-11">
                     {item.description || "No description available."}
                   </p>
 
                   <button
-                    onClick={() => addItem({
-                      id: item.id,
-                      name: item.name,
-                      price: Number(rawPrice),
-                      image: item.resolvedImageUrl,
-                      category: item.category,
-                    })}
+                    onClick={() =>
+                      addItem({
+                        id: item.id,
+                        name: item.name,
+                        price: Number(rawPrice),
+                        image: item.resolvedImageUrl,
+                        category: item.category,
+                      })
+                    }
                     className="w-full text-white font-semibold py-3.5 rounded-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
-                    style={{
-                      background: 'linear-gradient(to right, #B08968, #8B5E3C)',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(to right, #9A7A5F, #7A5A3C)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(to right, #B08968, #8B5E3C)'}
+                    style={{ background: "linear-gradient(to right, #B08968, #8B5E3C)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "linear-gradient(to right, #9A7A5F, #7A5A3C)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "linear-gradient(to right, #B08968, #8B5E3C)")
+                    }
                   >
                     Add to Cart
                   </button>

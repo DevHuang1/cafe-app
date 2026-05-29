@@ -9,7 +9,7 @@ export default function MenuPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div className="min-h-screen pt-[72px]" style={{ background: '#FDFCFB' }}>
+    <div className="min-h-screen pt-18" style={{ background: '#FDFCFB' }}>
 
       {/* Search bar */}
       <SearchBar onSearch={setSearchTerm} />
@@ -55,9 +55,9 @@ export default function MenuPage() {
             </p>
             <div className="mt-5 flex items-center justify-center gap-3"
               style={{ animation: 'fadeUp 0.6s ease 0.3s both' }}>
-              <div className="h-px w-16 bg-gradient-to-r from-transparent to-[#C4A882]" />
+              <div className="h-px w-16 bg-linear-to-r from-transparent to-[#C4A882]" />
               <span className="text-[#C4A882] text-lg">☕</span>
-              <div className="h-px w-16 bg-gradient-to-l from-transparent to-[#C4A882]" />
+              <div className="h-px w-16 bg-linear-to-l from-transparent to-[#C4A882]" />
             </div>
           </div>
 
