@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Coffee, User, ShieldCheck, Mail, Lock, IdCard } from "lucide-react";
-
 import { createClient } from "@/utils/supabase/client";
 import Signup from "@/lib/signup/actions";
 import OtpModal from "@/components/Auth/OTPModal";
@@ -39,12 +38,7 @@ export default function SignUpPage() {
         token: otp,
         type: "signup",
       });
-
-      if (error) {
-        alert("Invalid code. Please try again.");
-        return;
-      }
-
+      if (error) { alert("Invalid code. Please try again."); return; }
       if (data.session) {
         window.location.href = role === "staff" ? "/staff/dashboard" : "/menu";
       }
@@ -54,167 +48,255 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] flex items-center justify-center p-4 font-sans">
-      {/* Decorative background element */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
-      </div>
+    <>
+      <style>{`
+        .su-input {
+          width: 100%;
+          padding: 14px 16px 14px 44px;
+          background: white;
+          border: 1.5px solid #E8E2DA;
+          border-radius: 12px;
+          color: #3E2723;
+          font-size: 15px;
+          outline: none;
+          transition: border-color 0.25s, box-shadow 0.25s, background 0.2s;
+        }
+        .su-input-plain {
+          width: 100%;
+          padding: 14px 16px;
+          background: white;
+          border: 1.5px solid #E8E2DA;
+          border-radius: 12px;
+          color: #3E2723;
+          font-size: 15px;
+          outline: none;
+          transition: border-color 0.25s, box-shadow 0.25s, background 0.2s;
+        }
+        .su-input::placeholder,
+        .su-input-plain::placeholder { color: #c4b5a5; }
+        .su-input:hover,
+        .su-input-plain:hover {
+          border-color: #C08A5D;
+          background: #fffaf7;
+        }
+        .su-input:focus,
+        .su-input-plain:focus {
+          border-color: #8B5E3C;
+          box-shadow: 0 0 0 4px rgba(139,94,60,0.1);
+          background: #fffaf7;
+        }
 
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-[#E8E2DA] relative z-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-4">
-            <Coffee className="text-accent w-8 h-8" />
-          </div>
-          <h1 className="text-3xl font-serif font-bold text-[#3E2723] mb-2">
-            Brewing Happiness
-          </h1>
-          <p className="text-gray-500 italic">
-            Join our specialty coffee community
-          </p>
-        </div>
+        .su-input-staff {
+          width: 100%;
+          padding: 14px 16px 14px 44px;
+          background: #FFF8F1;
+          border: 1.5px solid rgba(139,94,60,0.25);
+          border-radius: 12px;
+          color: #3E2723;
+          font-size: 15px;
+          outline: none;
+          transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .su-input-staff::placeholder { color: #c4b5a5; }
+        .su-input-staff:hover { border-color: #C08A5D; }
+        .su-input-staff:focus {
+          border-color: #8B5E3C;
+          box-shadow: 0 0 0 4px rgba(139,94,60,0.1);
+        }
 
-        {/* --- TACTILE ROLE SELECTOR --- */}
-        <div className="relative flex bg-[#F5F1EE] p-1.5 rounded-2xl mb-8 border border-[#E8E2DA]">
-          {/* Sliding Highlight */}
-          <div
-            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out ${
-              role === "staff" ? "translate-x-full" : "translate-x-0"
-            }`}
-          />
+        .su-btn {
+          width: 100%;
+          padding: 15px;
+          background: #8B5E3C;
+          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          border-radius: 14px;
+          border: none;
+          cursor: pointer;
+          letter-spacing: 0.03em;
+          transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .su-btn:hover {
+          background: #7A5233;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(139,94,60,0.35);
+        }
+        .su-btn:active {
+          transform: translateY(0) scale(0.98);
+          box-shadow: none;
+        }
+        .su-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
 
-          <button
-            type="button"
-            onClick={() => setRole("customer")}
-            className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-colors ${
-              role === "customer" ? "text-accent" : "text-gray-400"
-            }`}
-          >
-            <User size={18} />
-            Customer
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("staff")}
-            className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition-colors ${
-              role === "staff" ? "text-accent" : "text-gray-400"
-            }`}
-          >
-            <ShieldCheck size={18} />
-            Staff
-          </button>
-        </div>
+        .role-btn {
+          position: relative;
+          z-index: 10;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 10px 0;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 10px;
+          transition: color 0.2s;
+        }
+        .role-btn:hover { opacity: 0.85; }
+        .role-btn:active { transform: scale(0.97); }
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
-                First Name
-              </label>
-              <input
-                name="firstName"
-                type="text"
-                required
-                className="w-full px-4 py-3 bg-white border border-[#E8E2DA] rounded-xl focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all placeholder:text-gray-300"
-                placeholder="Aung"
-              />
+        .signin-link {
+          color: #8B5E3C;
+          font-weight: 700;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .signin-link:hover {
+          color: #6B4226;
+          text-decoration: underline;
+        }
+      `}</style>
+
+      <div className="min-h-screen bg-white flex items-center justify-center p-4 pt-28 pb-12 relative overflow-hidden">
+
+        {/* Decorative blobs */}
+        <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none opacity-10"
+          style={{ background: "#8B5E3C", filter: "blur(120px)" }} />
+        <div className="fixed bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none opacity-10"
+          style={{ background: "#C08A5D", filter: "blur(120px)" }} />
+
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-[#E8E2DA] relative z-10">
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+              style={{ background: "rgba(139,94,60,0.1)" }}>
+              <Coffee className="w-8 h-8 text-[#8B5E3C]" />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
-                Last Name
-              </label>
-              <input
-                name="lastName"
-                type="text"
-                required
-                className="w-full px-4 py-3 bg-white border border-[#E8E2DA] rounded-xl focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all placeholder:text-gray-300"
-                placeholder="Kyaw"
-              />
-            </div>
+            <h1 className="text-3xl font-serif font-bold text-[#3E2723] mb-2">
+              Brewing Happiness
+            </h1>
+            <p className="text-gray-400 italic text-[15px]">
+              Join our specialty coffee community
+            </p>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
-                size={18}
-              />
-              <input
-                name="email"
-                type="email"
-                required
-                className="w-full pl-11 pr-4 py-3 bg-white border border-[#E8E2DA] rounded-xl focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all placeholder:text-gray-300"
-                placeholder="coffee-lover@example.com"
-              />
-            </div>
+          {/* Role selector */}
+          <div className="relative flex bg-[#F5F1EE] p-1.5 rounded-2xl mb-8 border border-[#E8E2DA]">
+            <div
+              className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out"
+              style={{ transform: role === "staff" ? "translateX(calc(100% + 12px))" : "translateX(0)" }}
+            />
+            <button
+              type="button"
+              onClick={() => setRole("customer")}
+              className="role-btn"
+              style={{ color: role === "customer" ? "#8B5E3C" : "#9ca3af" }}
+            >
+              <User size={18} /> Customer
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("staff")}
+              className="role-btn"
+              style={{ color: role === "staff" ? "#8B5E3C" : "#9ca3af" }}
+            >
+              <ShieldCheck size={18} /> Staff
+            </button>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
-              Password
-            </label>
-            <div className="relative">
-              <Lock
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
-                size={18}
-              />
-              <input
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-[#E8E2DA] rounded-xl focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all placeholder:text-gray-300"
-                placeholder="At least 6 characters"
-              />
-            </div>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
 
-          {role === "staff" && (
-            <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
-                Staff ID Number
-              </label>
-              <div className="relative">
-                <IdCard
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
-                  size={18}
-                />
+            {/* Name row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
+                  First Name
+                </label>
                 <input
-                  name="employee_id"
+                  name="firstName"
                   type="text"
-                  required={role === "staff"}
-                  className="w-full pl-11 pr-4 py-3 bg-[#FFF8F1] border border-accent/20 rounded-xl outline-none transition-all placeholder:text-gray-300"
-                  placeholder="e.g. STF-2024-001"
+                  required
+                  className="su-input-plain"
+                  placeholder="Aung"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
+                  Last Name
+                </label>
+                <input
+                  name="lastName"
+                  type="text"
+                  required
+                  className="su-input-plain"
+                  placeholder="Kyaw"
                 />
               </div>
             </div>
-          )}
 
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 px-4 bg-accent hover:bg-accent-hover text-white font-bold rounded-2xl shadow-[0_8px_20px_-6px_rgba(var(--accent-rgb),0.5)] transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading
-                ? "Preparing your account..."
-                : role === "staff"
-                  ? "Register Staff Member"
-                  : "Join the Community"}
-            </button>
-          </div>
-        </form>
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                <input name="email" type="email" required className="su-input" placeholder="coffee-lover@example.com" />
+              </div>
+            </div>
 
-        <p className="mt-8 text-center text-gray-500 text-sm">
-          Already part of the family?{" "}
-          <Link href="/login" className="text-accent font-bold hover:underline">
-            Sign in here
-          </Link>
-        </p>
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                <input name="password" type="password" required minLength={6} className="su-input" placeholder="At least 6 characters" />
+              </div>
+            </div>
+
+            {/* Staff ID */}
+            {role === "staff" && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#5D4037] ml-1">
+                  Staff ID Number
+                </label>
+                <div className="relative">
+                  <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C08A5D]" size={18} />
+                  <input name="employee_id" type="text" required className="su-input-staff" placeholder="e.g. STF-2024-001" />
+                </div>
+              </div>
+            )}
+
+            {/* Submit */}
+            <div className="pt-2">
+              <button type="submit" disabled={loading} className="su-btn">
+                {loading
+                  ? "Preparing your account..."
+                  : role === "staff"
+                    ? "Register Staff Member"
+                    : "Join the Community"}
+              </button>
+            </div>
+
+          </form>
+
+          <p className="mt-8 text-center text-gray-500 text-sm">
+            Already part of the family?{" "}
+            <Link href="/login" className="signin-link">Sign in here</Link>
+          </p>
+
+        </div>
       </div>
 
       <OtpModal
@@ -222,6 +304,6 @@ export default function SignUpPage() {
         email={userEmail}
         onVerify={handleVerifyOtp}
       />
-    </div>
+    </>
   );
 }

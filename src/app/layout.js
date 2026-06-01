@@ -1,9 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Home/Navbar";
-import { createClient } from "@/utils/supabase/server";
-
-export const dynamic = "force-dynamic";
+import NavbarWrapper from "@/components/Home/NavbarWrapper";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -20,35 +17,15 @@ export const metadata = {
   description: "Produced by UIT team",
 };
 
-export default async function RootLayout({ children }) {
-  let user = null;
-  let profile = null;
-
-  try {
-    const supabase = await createClient();
-    const { data: authData } = await supabase.auth.getUser();
-    user = authData?.user || null;
-
-    if (user) {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("image_url, full_name, role")
-        .eq("id", user.id)
-        .maybeSingle();
-      profile = profileData;
-    }
-  } catch (error) {
-    console.error("Layout fetch error:", error);
-  }
-
+export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar serverUser={user} serverProfile={profile} />
-        <main className="flex-grow pt-20">{children}</main>
+        <NavbarWrapper />
+        {children}
       </body>
     </html>
   );
